@@ -1,0 +1,111 @@
+---
+- hosts: Local
+  tasks:
+
+  - name: Snap Packages
+    snap:
+      name: "{{ item }}"
+      classic: yes
+    loop:
+      - code
+      # - bitwarden
+      # - kubernetes-cli
+      # - kubernetes-helm
+      # - discord
+      # - google-chrome
+      # - mysqlworkbench
+      # - fantasy-grounds
+      # - flux
+
+  - name: install  packages
+    apt:
+      name: "{{ item }}"
+      state: present
+    loop: 
+      - autoconf
+      - automake
+      - bash
+      - clang-format
+      - cmake
+      - coreutils
+      - dos2unix
+      - fping
+      - gnupg
+      - htop
+      - p7zip
+      - pbzip2
+      - pigz
+      - tmux
+      - vim
+      - w3m
+      - wget
+      - zsh
+      - zsh-syntax-highlighting
+      - npm
+      - cowsay
+      - redis
+      - tree
+      - jq
+      - yarn
+      - docker
+      - firefox
+      - steam
+      - wireshark
+    become: true
+
+  - name: Deploy Updated Profiles
+    template:
+      backup: true
+      dest: "~/.{{ item }}rc"
+      src: "templates/{{ item }}_profile"
+    loop:
+      - "zsh"
+      - "bash"
+
+  - name: Setup Oh My Zsh
+    shell: sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+    args:
+      creates: "~/.oh-my-zsh/oh-my-zsh.sh"
+
+  - name: Download Zsh Theme
+    get_url:
+      url: https://raw.githubusercontent.com/caiogondim/bullet-train-oh-my-zsh-theme/master/bullet-train.zsh-theme
+      dest: "~/.oh-my-zsh/custom/themes/bullet-train.zsh-theme"
+
+  - name: Setup Fonts
+    copy:
+      src: fonts/*.ttf
+      dest: "~/Library/fonts/"
+      owner: pclemens
+      group: staff
+      mode: '0755'
+
+  - name: Get list of Fonts
+    command: "find /Users/pclemens/GIT/macossetup/fonts -type f"
+    register: files_to_copy
+
+  - name: debug
+    debug:
+      var: "{{ files_to_copy.stdout_lines }}"
+
+  - name: Setup Fonts
+    copy:
+      src: "{{ item }}" 
+      dest: "~/Library/fonts/"
+      owner: pclemens
+      group: staff
+      mode: 0750
+    loop:
+    - "{{ files_to_copy.stdout_lines }}"
+
+  - name: Install VS Code Extentions
+    shell: code --install-extension {{ item }}
+    loop:
+     - "eamodio.gitlens"
+     - "esbenp.prettier-vscode"
+     - "coenraads.bracket-pair-colorizer-2"
+     - "docsmsft.docs-markdown"
+     - "oderwat.indent-rainbow"
+     - "yzhang.markdown-all-in-one"
+     - "ms-vscode.sublime-keybindings"
+     - "redhat.vscode-yaml"
